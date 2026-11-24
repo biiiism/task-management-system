@@ -1,0 +1,139 @@
+CURL TEST CURL TEST SUITE - Task Management System
+Module: CMS3407
+Base URL (local): http://localhost:3000
+Note: Commands are for Windows PowerShell (curl.exe). JSON bodies are
+stored in body files to avoid quoting problems.
+
+
+TASK SERVICE
+
+TEST 1 (Right): GET all tasks
+Command:
+curl.exe -i http://localhost:3000/tasks
+Expected: HTTP 200 OK and a JSON array.
+Actual: HTTP 200 OK and a JSON array of tasks.
+Result: PASS
+
+TEST 2 (Wrong): GET on a misspelt route
+Command:
+curl.exe -i http://localhost:3000/tassks
+Expected: HTTP 404 Not Found and {"error":"Route /tassks not found"}
+Actual: HTTP 404 Not Found and {"error":"Route /tassks not found"}
+Result: Fail 
+
+TEST 3 (Right): POST a new task
+body_post.json contains: {"title":"Buy milk"}
+Command:
+curl.exe -i -X POST http://localhost:3000/tasks -H "Content-Type: application/json" --data "@body_post.json"
+Expected: HTTP 201 Created and {"id":1,"title":"Buy milk","completed":false}
+Actual: HTTP 201 Created and {"id":1,"title":"Buy milk","completed":false}
+Result: PASS
+
+TEST 4 (Wrong): POST with missing title
+body_empty.json contains: {}
+Command:
+curl.exe -i -X POST http://localhost:3000/tasks -H "Content-Type: application/json" --data "@body_empty.json"
+Expected: HTTP 400 Bad Request and {"error":"title is required"}
+Actual: HTTP 400 Bad Request and {"error":"title is required"}
+Result: Fail
+
+TEST 5 (Right): PUT mark task 1 as complete
+body_put.json contains: {"completed":true}
+Command:
+curl.exe -i -X PUT http://localhost:3000/tasks/1 -H "Content-Type: application/json" --data "@body_put.json"
+Expected: HTTP 200 OK and "completed":true
+Actual: HTTP 200 OK and "completed":true
+Result: PASS 
+
+TEST 6 (Wrong): PUT on a task that does not exist
+Command:
+curl.exe -i -X PUT http://localhost:3000/tasks/999 -H "Content-Type: application/json" --data "@body_put.json"
+Expected: HTTP 404 Not Found and {"error":"Task not found"}
+Actual:  HTTP 404 Not Found and {"error":"Task not found"}
+Result: Fail
+
+TEST 7 (Wrong): DELETE a task that does not exist
+Command:
+curl.exe -i -X DELETE http://localhost:3000/tasks/999
+Expected: HTTP 404 Not Found and {"error":"Task not found"}
+Actual: HTTP 404 Not Found and {"error":"Task not found"}
+Result: Fail
+
+TEST 8 (Right): DELETE task 1
+Command:
+curl.exe -i -X DELETE http://localhost:3000/tasks/1
+Expected: HTTP 200 OK and {"message":"Task deleted",...}
+Actual: HTTP 200 OK and {"message":"Task deleted",...}
+Result: PASS 
+
+
+PART B: USER SERVICE
+
+TEST 9 (Right): GET all users
+Command:
+curl.exe -i http://localhost:3000/users
+Expected: HTTP 200 OK and a JSON array.
+Actual: HTTP 200 OK and a JSON array.
+Result: PASS
+
+TEST 10 (Wrong): GET on a misspelt route
+Command:
+curl.exe -i http://localhost:3000/userss
+Expected: HTTP 404 Not Found and {"error":"Route /userss not found"}
+Actual: HTTP 404 Not Found and {"error":"Route /userss not found"}
+Result: Fail
+
+TEST 11 (Right): POST a new user
+body_user.json contains: {"name":"Alice","email":"alice@example.com"}
+Command:
+curl.exe -i -X POST http://localhost:3000/users -H "Content-Type: application/json" --data "@body_user.json"
+Expected: HTTP 201 Created and {"id":1,"name":"Alice","email":"alice@example.com"}
+Actual: HTTP 201 Created and {"id":1,"name":"Alice","email":"alice@example.com"}
+Result: pass
+
+TEST 12 (Wrong): POST with missing name and email
+Command:
+curl.exe -i -X POST http://localhost:3000/users -H "Content-Type: application/json" --data "@body_empty.json"
+Expected: HTTP 400 Bad Request and {"error":"name and email are required"}
+Actual: HTTP 400 Bad Request and {"error":"name and email are required"}
+Result: Fail
+
+TEST 13 (Right): PUT update user 1
+body_user_put.json contains: {"name":"Alice Updated"}
+Command:
+curl.exe -i -X PUT http://localhost:3000/users/1 -H "Content-Type: application/json" --data "@body_user_put.json"
+Expected: HTTP 200 OK and "name":"Alice Updated"
+Actual: HTTP 200 OK and {"id":1,"name":"Alice Updated","email":"alice@example.com"}
+Result: PASS
+
+TEST 14 (Wrong): PUT on a user that does not exist
+Command:
+curl.exe -i -X PUT http://localhost:3000/users/999 -H "Content-Type: application/json" --data "@body_user_put.json"
+Expected: HTTP 404 Not Found and {"error":"User not found"}
+Actual: HTTP 404 Not Found and {"error":"User not found"}
+Result: Fail
+
+TEST 15 (Wrong): DELETE a user that does not exist
+Command:
+curl.exe -i -X DELETE http://localhost:3000/users/999
+Expected: HTTP 404 Not Found and {"error":"User not found"}
+Actual: HTTP 404 Not Found and {"error":"User not found"}
+Result: Fail
+
+TEST 16 (Right): DELETE user 1
+Command:
+curl.exe -i -X DELETE http://localhost:3000/users/1
+Expected: HTTP 200 OK and {"message":"User deleted",...}
+Actual: HTTP 200 OK and {"message":"User deleted",...}
+Result: pass 
+
+
+PART C: GATEWAY FAILURE
+
+TEST 17 (Wrong): Task Service is down
+Steps: run taskkill /IM node.exe /F, then start only the gateway with
+node gateway/gateway.js, then run:
+curl.exe -i http://localhost:3000/tasks
+Expected: HTTP 502 Bad Gateway and {"error":"Bad Gateway: service unavailable"}
+Actual: HTTP 502 Bad Gateway and {"error":"Bad Gateway: service unavailable"}
+Result: fail
